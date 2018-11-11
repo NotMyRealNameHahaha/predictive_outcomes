@@ -10,6 +10,38 @@ const autoprefixer = require('autoprefixer');
 
 const _PORT = 3000
 
+function tryResolve_(url, sourceFilename) {
+    // Put require.resolve in a try/catch to avoid node-sass failing with cryptic libsass errors
+    // when the importer throws
+    try {
+        return require.resolve(url, {
+            paths: [path.dirname(sourceFilename)]
+        });
+    } catch (e) {
+        return '';
+    }
+}
+
+function tryResolveScss(url, sourceFilename) {
+    // Support omission of .scss and leading _
+    const normalizedUrl = url.endsWith('.scss') ? url : `${url}.scss`;
+    return tryResolve_(normalizedUrl, sourceFilename) ||
+        tryResolve_(path.join(path.dirname(normalizedUrl), `_${path.basename(normalizedUrl)}`),
+            sourceFilename);
+}
+
+function materialImporter(url, prev) {
+    if (url.startsWith('@material')) {
+        const resolved = tryResolveScss(url, prev);
+        return {
+            file: resolved || url
+        };
+    }
+    return {
+        file: url
+    };
+}
+
 
 module.exports = {
     context: __dirname,
@@ -42,12 +74,13 @@ module.exports = {
     },
 
     plugins: [
+        // new CleanWebpackPlugin(['dist']),
         new BundleTracker({
             filename: './dist/webpack-stats.json'
         }),
         // new CleanWebpackPlugin(['dist']),
         new HtmlWebpackPlugin({
-            title: 'Development'
+            title: 'Predictive Outcomes'
         })
     ],
 
@@ -57,10 +90,7 @@ module.exports = {
 
     module: {
         rules: [{
-            test: [
-                /\.scss$/,
-                /\.css$/
-            ],
+            test:  /\.scss$/,
             use: [
                 {
                     loader: 'file-loader',
@@ -80,7 +110,8 @@ module.exports = {
                     loader: 'sass-loader',
                     options: {
                         sourceMap: true,
-                        includePaths: ['./node_modules']
+                        includePaths: ['./node_modules'],
+                        importer: materialImporter
                     }
                 },
             ]

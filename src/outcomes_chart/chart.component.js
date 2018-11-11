@@ -33,6 +33,9 @@ const getChartData = (range_node_arr)=> {
 }
 
 
+export const ChartTemplate = `<outcome-chart></outcome-chart>`
+
+
 export const ChartComponent = Vue.component('outcome-chart', {
     data: ()=> ({
         chart: '',

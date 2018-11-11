@@ -157,22 +157,26 @@ export const AppStore = new Vuex.Store({
     // Docs: https://vuex.vuejs.org/guide/mutations.html
     mutations: {
         setDateRange (state, payload) {
-            let start = payload.start
-            let end = payload.end
-
-            if (start <= end) {
-                start = moment(end).subtract(1, 'days').toDate()
-            }
-
             state.dateRange = {
-                start: start,
-                end: end
+                start: moment().toDate(),
+                end: moment(payload.end).toDate()
             }
+
+            console.log('setDateRange')
+            console.log(state)
+        },
+
+        setIntake (state, payload) {
+            state.calorie_intake = !isNaN(Number(payload)) ? Number(payload) : 2000
+            console.log('setIntake')
+            console.log(state)
         },
 
         setStats (state, payload) {
             const newStats = passiveMerge(state.userStats, payload)
             state.stats = newStats
+            console.log('setStats')
+            console.log(state)
         }
     },
 
