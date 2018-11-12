@@ -45,11 +45,11 @@ const relativeDate = (start_date)=> {
 
 const userStatsProp = R.prop('userStats')
 
-const userWeight = R.compose(R.prop('weight'), userStatsProp)
-const userHeight = R.compose(R.prop('height'), userStatsProp)
-const userAge = R.compose(R.prop('age'), userStatsProp)
-const userIsMale = R.compose(R.prop('is_male'), userStatsProp)
-const userPal = R.compose(R.prop('pal'), userStatsProp)
+// const userWeight = R.compose(R.prop('weight'), userStatsProp)
+// const userHeight = R.compose(R.prop('height'), userStatsProp)
+// const userAge = R.compose(R.prop('age'), userStatsProp)
+// const userIsMale = R.compose(R.prop('is_male'), userStatsProp)
+// const userPal = R.compose(R.prop('pal'), userStatsProp)
 
 const dateRangeProp = R.prop('dateRange')
 const endDate = R.compose(R.prop('end'), dateRangeProp)
@@ -79,13 +79,14 @@ const getRangeScope = (scope)=> {
         const calorie_intake = scope.calorie_intake
         const start_date = startDate(scope)
         const end_date = endDate(scope)
+        const statsProp = userStatsProp(scope)
 
         const startExpenditure = new TotalExpenditure(
-            userWeight(scope),
-            userHeight(scope),
-            userAge(scope),
-            userIsMale(scope),
-            userPal(scope)
+            statsProp.weight,
+            statsProp.height,
+            statsProp.age,
+            statsProp.is_male,
+            statsProp.pal
         )
 
         const calorieArr = repeatN(

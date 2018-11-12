@@ -13,7 +13,7 @@ import { IntakeForm } from './predictors.intake.form';
 import { PhysicalActivityForm } from './predictors.date.form';
 import { UserForm } from './predictors.userform';
 
-import * as utils from '../utils';
+// import * as utils from '../utils';
 
 export const PredictorsTemplate = `<predictors-component></predictors-component>`
 

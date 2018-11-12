@@ -37,18 +37,12 @@ buildDocument()
 // Component Config
 const chartComponent = {
     el:'#app',
-    AppStore,
+    store: AppStore,
 
     components: {
         'outcomes-component': ChartComponent,
         'predictors-component': PredictorsComponent
     }
 }
-
-
-// Vue Config
-// Vue.use(require('vue-chartist'), {
-//     messageNoData: 'No chart data to display'
-// })
 
 export const app = new Vue(chartComponent)

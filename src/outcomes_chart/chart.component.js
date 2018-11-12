@@ -4,6 +4,7 @@ const Chartist = require('chartist');
 
 import Vue from 'vue';
 import { AppStore } from '../outcomes_component/app.store';
+import { RangeFilter, DateRange } from './chart.rangefilter';
 
 
 const serialize = (x)=> JSON.parse(JSON.stringify(x))
@@ -13,18 +14,20 @@ const serialize = (x)=> JSON.parse(JSON.stringify(x))
  * Convert an Array of RangeNode instances to an
  * Object representation of the respective chart data
  * @param range_node_arr {Array [RangeNode]}
+ * @param validIndexes {Array [Number]}
  * @returns {Object}
  */
-const getChartData = (range_node_arr)=> {
+const getChartData = (range_node_arr, validIndexes)=> {
     let seriesMap = {
         labels: [],
         series: []
     }
     
     range_node_arr.forEach((item, index)=> {
-        seriesMap.labels.push(item.date)
-        seriesMap.series.push(item.userStats.weight)
-
+        if (validIndexes.indexOf(index) >= 0) {
+            seriesMap.labels.push(item.date)
+            seriesMap.series.push(item.userStats.weight)
+        }
     })
     const seriesArr = seriesMap.series
     // seriesMap.series = [seriesArr]
@@ -56,9 +59,22 @@ export const ChartComponent = Vue.component('outcome-chart', {
         dateRange: ()=> AppStore.state.dateRange,
         calorie_intake: ()=> AppStore.state.calorie_intake,
         userStats: ()=> AppStore.state.userStats,
-        chartData: ()=> getChartData(
-            AppStore.getters.rangeScopeNodes()
-        )
+        chartData: function() {
+            const dateRangeInstance = new DateRange(
+                this.dateRange.start,
+                this.dateRange.end
+            )
+            const dataIndexes = new RangeFilter(dateRangeInstance).getIndexes()
+            console.log(dataIndexes)
+
+            const data = getChartData(
+                AppStore.getters.rangeScopeNodes(),
+                dataIndexes
+            )
+            console.log(data)
+
+            return data
+        }
     },
 
     watch: {
@@ -109,7 +125,7 @@ export const ChartComponent = Vue.component('outcome-chart', {
     },
    
     template: `
-        <div v-if="chartData.series[0].length > 1"> 
+        <div> 
             <div ref="chartElement" class="ct-chart ct-major-second"></div>
         </div>
     `
