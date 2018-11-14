@@ -1,8 +1,9 @@
 const R = require('ramda');
 const moment = require('moment');
 const Chartist = require('chartist');
-
 import Vue from 'vue';
+
+import * as utils from '../common/utils';
 import { AppStore } from '../outcomes_component/app.store';
 import { RangeFilter, DateRange } from './chart.rangefilter';
 
@@ -25,13 +26,14 @@ const getChartData = (range_node_arr, validIndexes)=> {
     
     range_node_arr.forEach((item, index)=> {
         if (validIndexes.indexOf(index) >= 0) {
-            seriesMap.labels.push(item.date)
+            seriesMap.labels.push(
+                moment(item.date).format('MMM D YY')
+            )
             seriesMap.series.push(item.userStats.weight)
         }
     })
-    const seriesArr = seriesMap.series
-    // seriesMap.series = [seriesArr]
-    seriesMap.series = [seriesArr]
+    seriesMap.series = [seriesMap.series]
+
     return seriesMap
 }
 
@@ -44,11 +46,10 @@ export const ChartComponent = Vue.component('outcome-chart', {
         chart: '',
 
         chartOptions: {
-            fullWidth: true,
-            height: '500px',
-            // axisY: { onlyInteger: true },
-            // axisX: { onlyInteger: true },
-            chartPadding: { right: 10, left: 10 },
+            // fullWidth: true,
+            // height: '500px',
+            // minHeight: '500px',
+            // chartPadding: { right: 20, left: 20 },
             lineSmooth: Chartist.Interpolation.cardinal({ fillHoles: true }),
             low: 0,
             showArea: true
@@ -61,8 +62,8 @@ export const ChartComponent = Vue.component('outcome-chart', {
         userStats: ()=> AppStore.state.userStats,
         chartData: function() {
             const dateRangeInstance = new DateRange(
-                this.dateRange.start,
-                this.dateRange.end
+                moment(this.dateRange.start).toDate(),
+                moment(this.dateRange.end).toDate()
             )
             const dataIndexes = new RangeFilter(dateRangeInstance).getIndexes()
             console.log(dataIndexes)
@@ -80,12 +81,15 @@ export const ChartComponent = Vue.component('outcome-chart', {
     watch: {
         // Redraw when the chart data changes
         chartOptions: function() { this.redraw() },
-        chartData: function() { this.redraw() }
+        chartData: function() { this.redraw() },
+        calorie_intake: function() { this.redraw() },
+        userStats: function() { this.redraw() },
+        dateRange: function() { this.redraw() }
     },
 
     mounted: function() {
         window._ChartComponent = this
-        this.redraw()
+        utils.deferFn(()=> this.redraw())
     },
 
     updated: function () {
@@ -101,35 +105,84 @@ export const ChartComponent = Vue.component('outcome-chart', {
             /**
              * @method redraw: Update the Chartist instance w/ fresh data
              */
-            if (this.chart) {
-                this.chart.update(
-                    this.chartData,
-                    this.chartOptions
-                )
-            } else if (this.$refs.chartElement) {
-                try {
-                    const chart = new Chartist.Line(
-                        this.$refs.chartElement,
-                        serialize(this.chartData),
-                        serialize(this.chartOptions)
+            const scope = this
+
+            return utils.debounce(()=> {
+                if (scope.chart) {
+                    scope.chart.update(
+                        scope.chartData,
+                        scope.chartOptions
                     )
-                    console.log('Chart:')
-                    console.log(chart)
-                    this.chart = chart
-                } catch(err) {
-                    throw err
+                } else if (scope.$refs.chartElement) {
+                    const chart = new Chartist.Line(
+                        scope.$refs.chartElement,
+                        serialize(scope.chartData),
+                        serialize(scope.chartOptions)
+                    )
+            
+                    chart.on('draw', onChartDraw)
+            
+                    scope.chart = chart
                 }
-            }
+            }, 200)()
         }
 
     },
    
     template: `
         <div> 
-            <div ref="chartElement" class="ct-chart ct-major-second"></div>
+            <div ref="chartElement" class="ct-chart ct-minor-sixth"></div>
         </div>
     `
 })
+
+
+
+/** Update or create the Chartist instance
+ *  this is handled outside of the component
+ *  to reduce cognitive load WRT debouncing
+ * @param scope {ChartComponent}
+ * @returns {void}
+*/
+
+const redrawChart = (scope)=> {
+    if (scope.chart) {
+        scope.chart.update(
+            scope.chartData,
+            scope.chartOptions
+        )
+    } else if (scope.$refs.chartElement) {
+        const chart = new Chartist.Line(
+            scope.$refs.chartElement,
+            serialize(scope.chartData),
+            serialize(scope.chartOptions)
+        )
+
+        chart.on('draw', onChartDraw)
+
+        scope.chart = chart
+    }
+}
+
+
+const onChartDraw = (data)=> {
+    if (data.type === 'line' || data.type === 'area') {
+        data.element.animate({
+            d: {
+                begin: 2000 * data.index,
+                dur: 2000,
+                from: (
+                    data.path.clone()
+                        .scale(1, 0)
+                        .translate(0, data.chartRect.height())
+                        .stringify()
+                ),
+                to: data.path.clone().stringify(),
+                easing: Chartist.Svg.Easing.easeOutQuint
+            }
+        })
+    }
+}
 
 window._ChartComponent = ChartComponent
 window._store = AppStore

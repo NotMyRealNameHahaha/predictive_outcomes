@@ -1,4 +1,4 @@
-import { StringSearch } from './utils.str.search.js';
+// import { StringSearch } from './utils.str.search.js';
 
 // Utils
 /*  One-liners
@@ -373,9 +373,9 @@ export const Str = (str)=> {
                 return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
             });
         },
-        score: StringSearch.score,
-        diff: StringSearch.diff,
-        editDistance: StringSearch.editDistance,
+        // score: StringSearch.score,
+        // diff: StringSearch.diff,
+        // editDistance: StringSearch.editDistance,
         alphaOnly: function() {
             /* Strip out all special characters */
             return str.match(/([a-zA-Z0-9]|\s)/gi).join('');

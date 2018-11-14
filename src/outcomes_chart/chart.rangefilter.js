@@ -20,47 +20,48 @@ export class DateRange {
 const incrementArr = [
     // Days
     [
-        {min: 0, max: 90},
+        {max: 0, len: 1},
         {increment: 1, name: 'days'}
     ],
     // Weeks
     [
-        {min: 30, max: (365 / 2)},
+        {max: 30, len: 7},
         {increment: 7, name: 'days'}
     ],
     // Fortnights
     [
-        {min: (365 / 2), max: 365},
+        {max: (365 / 2), len: 14},
         {increment: 14, name: 'days'}
     ],
     // Months
     [
-        {min: 365, max: 730},
+        {max: 365, len: 30},
         {increment: 1, name: 'months'}
     ],
     // Quarters
     [
-        {min: 730, max: 3650},
+        {max: 730, len: 90},
         {increment: 3, name: 'months'}
     ],
     // Years
     [
-        {min: 3650, max: (365 * 50)},
+        {max: 3650, len: 365},
         {increment: 1, name: 'years'}
     ]
 ]
 
+const today = moment().toDate()
+
+const maxLength = 75
 
 export class RangeFilter {
-    constructor(dateRange, minNodes=0, maxNodes=50) {
+    constructor(dateRange, lens=R.prop('date')) {
         this.dateRange = dateRange
-        this.minNodes = minNodes
-        this.maxNodes = maxNodes
+        this.lens = lens
         this.incrementMap = new Map(incrementArr)
     }
 
     getIncrement() {
-        let incrementInstance = null
         const maxVal = this.dateRange.diff
 
         // Search the incrementMap,
@@ -69,50 +70,73 @@ export class RangeFilter {
         // from our Array of RangeNodes
         for (let i of this.incrementMap.entries()) {
             const minMax = i[0]
-            if (minMax.min <= maxVal && minMax.max >= maxVal) {
-                incrementInstance = i
+            if (maxVal <= minMax.max
+                || (maxVal / minMax.len) < maxLength) {
+                // incrementInstance = i
+                console.log(`
+                    maxVal >= minMax.min:
+                        maxVal: ${maxVal}
+                        minMax.min: ${minMax.max}
+                `)
+                return i
             }
         }
 
-        return incrementInstance
+        // Otherwise, just return the first item in our map
+        for (let x of this.incrementMap.entries()) {
+            return x
+        }
     }
 
-    _getNextIncrement(currentIndex, momentParams) {
+    _getNextIncrement(indexDate, momentParams) {
         /** Get the MOMENT associated w/ the next increment
-         *  @param currentIndex {Number}: Ie. start_date + currentIndex = date
+         *  @param indexDate {Date}: Ie. start_date + currentIndex
          *  @param momentParams {Object}: {increment: Number, name: String}
          *  @returns {moment}
          */
-        // Get the date associated with the CURRENT index
-        const momentDay = moment().add(currentIndex, 'days')
-        // Find the next date based on `increment` and `name`
-        return momentDay.add(
+        return moment(indexDate).add(
             momentParams.increment,
             momentParams.name
         ).toDate()
     }
 
     getIndexes() {
+        /**
+         * @returns { Array[Number] }
+         */
         const incrementInstance = this.getIncrement()
         const momentParams = incrementInstance[1]
+        const startDate = this.dateRange.start_date
+        const endDate = this.dateRange.end_date
 
         let nextIncrement = null
         let indexAccum = [0]
 
         for (let i = 0; i < this.dateRange.diff; i++) {
-            const indexDate = moment().add(i, 'days').toDate()
-            const validIncrement = (
-                nextIncrement !== null
-                && moment(indexDate).isSame(nextIncrement)
+            const indexDate = moment(startDate).add(i, 'days').toDate()
+
+            const validIncrement = R.or(
+                R.and(
+                    nextIncrement !== null,
+                    moment(indexDate).isSame(nextIncrement)
+                ),
+                moment(indexDate).isSame(endDate)
             )
 
             if (validIncrement) {
+                // If the date lines up with the next date increment,
+                // add this index to our indexAccum Array
+                // and get the next valid date
                 console.log(`validIncrement: ${i}`)
                 indexAccum.push(i)
-                nextIncrement = this._getNextIncrement(i, momentParams)
-            } else if (moment(nextIncrement).isBefore(indexDate)
+                nextIncrement = this._getNextIncrement(indexDate, momentParams)
+
+            } else if (
+                moment(nextIncrement).isBefore(indexDate)
                 || nextIncrement === null) {
-                nextIncrement = this._getNextIncrement(i, momentParams)
+                // Set the initial increment if needed,
+                // && handle edge-cases where we missed the increment
+                nextIncrement = this._getNextIncrement(indexDate, momentParams)
             }
         }
 

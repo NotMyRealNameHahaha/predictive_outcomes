@@ -13,7 +13,7 @@ import { IntakeForm } from './predictors.intake.form';
 import { PhysicalActivityForm } from './predictors.date.form';
 import { UserForm } from './predictors.userform';
 
-// import * as utils from '../utils';
+import * as utils from '../common/utils';
 
 export const PredictorsTemplate = `<predictors-component></predictors-component>`
 
@@ -64,6 +64,8 @@ const initSlider = (el)=> {
 
 const sortByDate = R.sortBy(R.prop('date'))
 
+const today = moment().toDate()
+
 const toInches = (feet, inches=0)=> (12 * feet) + inches
 const toCm = R.multiply(2.54)
 
@@ -102,8 +104,7 @@ export const PredictorsComponent = Vue.component('predictors-component', {
             console.log('dateRange')
             console.log(this.dateRange)
 
-            const today = moment().toDate()
-            const diff = moment().add(this.dateRange, 'days').toDate()
+            const diff = moment(today).add(this.dateRange, 'days').toDate()
 
             AppStore.commit('setDateRange', {
                 start: today,
@@ -112,6 +113,14 @@ export const PredictorsComponent = Vue.component('predictors-component', {
         },
 
         height: function() {
+            this.pushState()
+        },
+
+        userStats: function() {
+            this.pushState()
+        },
+
+        sex: function() {
             this.pushState()
         }
     },
@@ -133,24 +142,34 @@ export const PredictorsComponent = Vue.component('predictors-component', {
             }
 
             AppStore.commit('setStats', newStats)
+
+            AppStore.commit('setIntake', Number(this.calorie_intake))
+
+            AppStore.commit('setDateRange', {
+                start: today,
+                end: moment(today).add(this.dateRange, 'days').toDate()
+            })
+
         }
     },
 
     template: `<div id="predictors-component--container">${formTemplate}</div>`,
 
     mounted: function() {
+        const _this = this
         console.log('mounted')
         window._PredictorsComponent = this
-        this.pushState()
+
+        utils.deferFn(()=> _this.pushState())
 
         const sliderRef = DateForm.ref
         const sliderEl = this.$refs[sliderRef]
         const _mdcSlider = initSlider(sliderEl).slider
-        const _this = this
 
-        _mdcSlider.listen('MDCSlider:change', ()=> {
-            _this.dateRange = _mdcSlider.value
-        })
+        _mdcSlider.listen('MDCSlider:change', utils.debounce(
+            ()=>  _this.dateRange = _mdcSlider.value,
+            50
+        ))
     },
 
     updated: function() {
@@ -158,63 +177,6 @@ export const PredictorsComponent = Vue.component('predictors-component', {
         window._PredictorsComponent = this
         this.pushState()
     }
-
-    // computed: {
-    //     dateRange: ()=> AppStore.state.dateRange,
-    //     calorie_intake: ()=> AppStore.state.calorie_intake,
-    //     userStats: ()=> AppStore.state.userStats,
-    //     chartData: ()=> getChartData(
-    //         AppStore.getters.rangeScopeNodes()
-    //     )
-    // },
-
-    // watch: {
-    //     // Redraw when the chart data changes
-    //     chartOptions: function() { this.redraw() },
-    //     chartData: function() { this.redraw() }
-    // },
-
-    // mounted: function() {
-    //     window._ChartComponent = this
-    //     this.redraw()
-    // },
-
-    // updated: function () {
-    //     this.redraw()
-    // },
-    // activated: function() {
-    //     this.redraw()
-    // },
-
-    // methods: {
-
-    //     redraw() {
-    //         /**
-    //          * @method redraw: Update the Chartist instance w/ fresh data
-    //          */
-    //         if (this.chart) {
-    //             this.chart.update(
-    //                 this.chartData,
-    //                 this.chartOptions
-    //             )
-    //         } else if (this.$refs.chartElement) {
-    //             try {
-    //                 const chart = new Chartist.Line(
-    //                     this.$refs.chartElement,
-    //                     serialize(this.chartData),
-    //                     serialize(this.chartOptions)
-    //                 )
-    //                 console.log('Chart:')
-    //                 console.log(chart)
-    //                 this.chart = chart
-    //             } catch(err) {
-    //                 throw err
-    //             }
-    //         }
-    //     }
-
-    // },
-   
 })
 
 window._PredictorsComponent = PredictorsComponent

@@ -37,10 +37,7 @@ const deltaDays = (start, end)=> Math.abs(
     moment(start).diff(moment(end), 'days')
 )
 
-const relativeDate = (start_date)=> {
-    const startMoment = moment(start_date)
-    return (index)=> startMoment.add(index, 'days').toDate()
-}
+const relativeDate = (start_date)=> (index)=> moment(start_date).add(index, 'days').toDate()
 
 
 const userStatsProp = R.prop('userStats')
@@ -127,8 +124,8 @@ export const AppStore = new Vuex.Store({
     // Docs: https://vuex.vuejs.org/guide/state.html
     state: {
         dateRange: {
-            start: moment().subtract(30, 'days').toDate(),
-            end: moment().toDate()
+            start: moment().toDate(),
+            end: moment().add(30, 'days').toDate()
         },
 
         calorie_intake: 20000,
@@ -162,22 +159,15 @@ export const AppStore = new Vuex.Store({
                 start: moment().toDate(),
                 end: moment(payload.end).toDate()
             }
-
-            console.log('setDateRange')
-            console.log(state)
         },
 
         setIntake (state, payload) {
             state.calorie_intake = !isNaN(Number(payload)) ? Number(payload) : 2000
-            console.log('setIntake')
-            console.log(state)
         },
 
         setStats (state, payload) {
             const newStats = passiveMerge(state.userStats, payload)
             state.stats = newStats
-            console.log('setStats')
-            console.log(state)
         }
     },
 
