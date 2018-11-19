@@ -1,6 +1,9 @@
 const R = require('ramda');
 const moment = require('moment');
 const Chartist = require('chartist');
+import 'chartist-plugin-pointlabels';
+import 'chartist-plugin-tooltips';
+import 'chartist-plugin-axistitle';
 import Vue from 'vue';
 
 import * as utils from '../common/utils';
@@ -9,6 +12,10 @@ import { RangeFilter, DateRange } from './chart.rangefilter';
 
 
 const serialize = (x)=> JSON.parse(JSON.stringify(x))
+
+const itemsAt = (index_arr, x)=> index_arr.reduce(
+    (accum, i)=> accum.concat(x[i]), []
+).filter(Boolean)
 
 
 /**
@@ -24,35 +31,105 @@ const getChartData = (range_node_arr, validIndexes)=> {
         series: []
     }
     
-    range_node_arr.forEach((item, index)=> {
-        if (validIndexes.indexOf(index) >= 0) {
-            seriesMap.labels.push(
-                moment(item.date).format('MMM D YY')
-            )
-            seriesMap.series.push(item.userStats.weight)
-        }
-    })
+    itemsAt(validIndexes, range_node_arr)
+        .forEach((item)=> {
+            // seriesMap.labels.push(moment(item.date).format('MMM D YY'))
+            seriesMap.labels.push(moment(item.date).toDate())
+
+            seriesMap.series.push({
+                value: item.userStats.weight,
+                meta: `
+                    <div class="chart--tooltip-body">
+                        ${Math.round(item.userStats.weight)} lbs.
+                        <br>
+                        ${moment(item.date).format('D of MMM, YYYY')}
+                    </div>
+                `
+            })
+        })
+
     seriesMap.series = [seriesMap.series]
 
     return seriesMap
 }
 
 
+const getChartHighest_ = R.pipe(
+    R.prop('series'),
+    R.flatten,
+    R.partial(
+        R.map,
+        [R.compose(Number, R.prop('value'))]    
+    ),
+    (arr)=> Math.max(...arr),
+    // Add 30 so we can have some breathing room for tooltips
+    (val)=> val + 20
+)
+
+
 export const ChartTemplate = `<outcome-chart></outcome-chart>`
 
 
 export const ChartComponent = Vue.component('outcome-chart', {
+    template: `
+        <div class="chart--container"> 
+            <div ref="chartElement" class="ct-chart rel"></div>
+        </div>
+    `,
+
     data: ()=> ({
         chart: '',
 
         chartOptions: {
             // fullWidth: true,
-            // height: '500px',
+            height: '500px',
             // minHeight: '500px',
-            // chartPadding: { right: 20, left: 20 },
-            lineSmooth: Chartist.Interpolation.cardinal({ fillHoles: true }),
+            chartPadding: {
+                top: 20,
+                right: 5,
+                bottom: 30,
+                left: 10
+            },
             low: 0,
-            showArea: true
+            showArea: true,
+            axisY: {
+                onlyInteger: true,
+            },
+            axisX: {
+                // type: Chartist.FixedScaleAxis,
+                divisor: 2,
+
+                labelInterpolationFnc: (v)=> moment(v).format('MMM D')
+            },
+
+            plugins: [
+                Chartist.plugins.tooltip({
+                    anchorToPoint: true,
+                    pointClass: 'point--custom'
+                }),
+
+                Chartist.plugins.ctAxisTitle({
+                    axisX: {
+                        axisTitle: 'Date',
+                        axisClass: 'ct-axis-title mdc-theme--on-primary',
+                        textAnchor: 'middle',
+                        offset: {
+                            x: 0,
+                            y: 50
+                        },
+                    },
+                    axisY: {
+                        axisTitle: 'Weight (lbs)',
+                        axisClass: 'ct-axis-title mdc-theme--on-primary',
+                        textAnchor: 'middle',
+                        flipTitle: false,
+                        offset: {
+                            x: 0,
+                            y: -5
+                        }
+                    }
+                })
+            ]
         }
     }),
 
@@ -66,13 +143,11 @@ export const ChartComponent = Vue.component('outcome-chart', {
                 moment(this.dateRange.end).toDate()
             )
             const dataIndexes = new RangeFilter(dateRangeInstance).getIndexes()
-            console.log(dataIndexes)
 
             const data = getChartData(
                 AppStore.getters.rangeScopeNodes(),
                 dataIndexes
             )
-            console.log(data)
 
             return data
         }
@@ -108,16 +183,27 @@ export const ChartComponent = Vue.component('outcome-chart', {
             const scope = this
 
             return utils.debounce(()=> {
+                const chartData = scope.chartData
+                const optionsWithHighValue = Object.assign({}, scope.chartOptions, {
+                    high: getChartHighest_(chartData)
+                })
+
                 if (scope.chart) {
-                    scope.chart.update(
-                        scope.chartData,
-                        scope.chartOptions
+                    // Empty the tooltip body before the chart context changes
+                    utils.cEls('.chart--tooltip-body')().forEach(
+                        (n)=> n.parentElement.removeChild(n)
                     )
+
+                    scope.chart.update(
+                        chartData,
+                        optionsWithHighValue
+                    )
+
                 } else if (scope.$refs.chartElement) {
                     const chart = new Chartist.Line(
                         scope.$refs.chartElement,
-                        serialize(scope.chartData),
-                        serialize(scope.chartOptions)
+                        serialize(chartData),
+                        optionsWithHighValue
                     )
             
                     chart.on('draw', onChartDraw)
@@ -127,64 +213,23 @@ export const ChartComponent = Vue.component('outcome-chart', {
             }, 200)()
         }
 
-    },
-   
-    template: `
-        <div> 
-            <div ref="chartElement" class="ct-chart ct-minor-sixth"></div>
-        </div>
-    `
+    }
 })
 
-
-
-/** Update or create the Chartist instance
- *  this is handled outside of the component
- *  to reduce cognitive load WRT debouncing
- * @param scope {ChartComponent}
- * @returns {void}
-*/
-
-const redrawChart = (scope)=> {
-    if (scope.chart) {
-        scope.chart.update(
-            scope.chartData,
-            scope.chartOptions
-        )
-    } else if (scope.$refs.chartElement) {
-        const chart = new Chartist.Line(
-            scope.$refs.chartElement,
-            serialize(scope.chartData),
-            serialize(scope.chartOptions)
-        )
-
-        chart.on('draw', onChartDraw)
-
-        scope.chart = chart
-    }
-}
-
-
 const onChartDraw = (data)=> {
-    if (data.type === 'line' || data.type === 'area') {
-        data.element.animate({
-            d: {
-                begin: 2000 * data.index,
-                dur: 2000,
-                from: (
-                    data.path.clone()
-                        .scale(1, 0)
-                        .translate(0, data.chartRect.height())
-                        .stringify()
-                ),
-                to: data.path.clone().stringify(),
-                easing: Chartist.Svg.Easing.easeOutQuint
-            }
-        })
+    // If the draw event was triggered from drawing a point on the line chart
+    if (data.type === 'point') {
+        const circle = new Chartist.Svg('circle', {
+            cx: [data.x],
+            cy: [data.y],
+            r: [5],
+            'ct:value': data.meta || '',
+            'ct:meta': '',
+            class: 'point--custom',
+        }, 'ct-area')
+
+        // With data.element we get the Chartist SVG wrapper and we can replace the original point drawn by Chartist with our newly created triangle
+        data.element.replace(circle)
     }
 }
 
-window._ChartComponent = ChartComponent
-window._store = AppStore
-window.moment = moment
-window.R = R

@@ -7,7 +7,6 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const autoprefixer = require('autoprefixer');
 
-
 const _PORT = 3000
 
 function tryResolve_(url, sourceFilename) {
@@ -24,33 +23,31 @@ function tryResolve_(url, sourceFilename) {
 
 function tryResolveScss(url, sourceFilename) {
     // Support omission of .scss and leading _
-    const normalizedUrl = url.endsWith('.scss') ? url : `${url}.scss`;
+    const normalizedUrl = url.endsWith('.scss') ? url : `${url}.scss`
     return tryResolve_(normalizedUrl, sourceFilename) ||
         tryResolve_(path.join(path.dirname(normalizedUrl), `_${path.basename(normalizedUrl)}`),
-            sourceFilename);
+            sourceFilename)
 }
 
 function materialImporter(url, prev) {
     if (url.startsWith('@material')) {
-        const resolved = tryResolveScss(url, prev);
+        const resolved = tryResolveScss(url, prev)
         return {
             file: resolved || url
-        };
+        }
     }
     return {
         file: url
-    };
+    }
 }
 
 
 module.exports = {
     context: __dirname,
     mode: 'development',
-    //entry: './static_assets/src/index.js',
     
     //-- App entry-points (bundles)
     entry: {
-        // site: './static_assets/src/site/app.js',
         outcomes_component: './src/outcomes_component/app.js',
         app_styles: './src/app_styles.scss'
     },
@@ -74,11 +71,10 @@ module.exports = {
     },
 
     plugins: [
-        // new CleanWebpackPlugin(['dist']),
         new BundleTracker({
             filename: './dist/webpack-stats.json'
         }),
-        // new CleanWebpackPlugin(['dist']),
+        new CleanWebpackPlugin(['dist']),
         new HtmlWebpackPlugin({
             title: 'Predictive Outcomes'
         })
@@ -90,41 +86,69 @@ module.exports = {
 
     module: {
         rules: [{
-            test:  /\.scss$/,
-            use: [
-                {
-                    loader: 'file-loader',
-                    options: {
-                        name: 'bundle.css',
+                test: /\.scss$/,
+                use: [{
+                        loader: 'file-loader',
+                        options: {
+                            name: 'bundle.css',
+                        },
                     },
-                },
-                { loader: 'extract-loader' },
-                { loader: 'css-loader' },
-                {
-                    loader: 'postcss-loader',
-                    options: {
-                        plugins: () => [autoprefixer()]
-                    }
-                },
-                {
-                    loader: 'sass-loader',
-                    options: {
-                        sourceMap: true,
-                        includePaths: ['./node_modules'],
-                        importer: materialImporter
-                    }
-                },
-            ]
-        }, {
-            test: /\.js$/,
-            exclude: /node_modules/,
-            // use: ['babel-loader'],
-            loader: 'babel-loader',
-            query: {
-                presets: ['es2015'],
-                plugins: ['transform-object-assign']
+                    {
+                        loader: 'extract-loader'
+                    },
+                    {
+                        loader: 'css-loader'
+                    },
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            plugins: () => [
+                                autoprefixer()
+                            ]
+                        }
+                    },
+                    {
+                        loader: 'sass-loader',
+                        options: {
+                            sourceMap: true,
+                            includePaths: ['./node_modules'],
+                            importer: materialImporter
+                        }
+                    },
+                ]
             },
-        }]
+            {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                // use: ['babel-loader'],
+                loader: 'babel-loader',
+                query: {
+                    presets: ['es2015'],
+                    plugins: ['transform-object-assign']
+                },
+            },
+            {
+
+                test: /\.(jpe?g|png|gif|svg|eot|woff|ttf|svg|woff2)$/,
+                use: {
+                    loader: 'file-loader',
+                }
+            },
+            {
+                // Use url-loader for tiny files
+                test: /\.(png|jpg|gif)$/i,
+                use: [{
+                    loader: 'url-loader',
+                    options: {
+                        limit: 8192
+                    }
+                }]
+            },
+            {
+                test: /\.svg$/,
+                loader: 'svg-inline-loader'
+            }
+        ]
     },
     resolve: {
         alias: {

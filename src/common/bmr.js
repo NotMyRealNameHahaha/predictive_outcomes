@@ -1,9 +1,13 @@
-/* Provide the means to calculate Basal Metabolic Rate,
-*    and Total Energy Expenditure
-*  Calculations are based on the Mifflin St. Jeor equation
-*
-*  Note: Values are based on the Metric system (kg, cm, grams, etc).
-*/
+/** Provide the means to calculate Basal Metabolic Rate,
+ *    and Total Energy Expenditure
+ *  Calculations are based on the Mifflin St. Jeor equation
+ *
+ * @exports Bmr {class}: Basal Metabolic Rate calculator
+ * @exports TotalExpenditure {class}: Extends Bmr by
+ *   facilitating Physical Activity Level (pal)
+ * @exports weightDiffKilos {Function}: How many KG would an individual lose
+ *   if they consumed `x` calories and burned `y` calories?
+ */
 
 const R = require('ramda');
 
@@ -18,17 +22,19 @@ const sexModifier = R.ifElse(
 
 /** Basal Metabolic Rate 
  * @class 
- * @param {Number} bw: Weight in kilos
+ * @param {Number} bw: Weight in (lbs or kilos)
  * @param {Number} height: Height in CM
  * @param {Number} age: Age in years
  * @param {Boolean} is_male: true === male, false === female
+ * @param {Boolean} weight_metric: If false, bw will be converted to kilos during computation
  */
 export class Bmr {
-    constructor(bw, height, age, is_male=true) {
+    constructor(bw, height, age, is_male=true, weight_metric=false) {
         this.weight = bw
         this.height = height
         this.age = age
         this.is_male = is_male
+        this.weight_pred = weight_metric ? 1 : 2.2
     }
 
     get modifier() {
@@ -36,7 +42,7 @@ export class Bmr {
     }
 
     getData() {
-        const weightModifier = 10 * this.weight
+        const weightModifier = 10 * (this.weight / this.weight_pred)
         const heightModifier = 6.25 * this.height
         const ageModifier = 5 * this.age
         const baseBmr = R.sum([

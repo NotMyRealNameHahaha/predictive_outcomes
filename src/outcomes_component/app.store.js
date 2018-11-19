@@ -7,6 +7,112 @@ import { TotalExpenditure } from '../common/bmr';
 
 Vue.use(Vuex)
 
+
+const today = moment().toDate()
+
+
+/**
+ * @exports AppStore {Vuex.Store}
+ * @property {Object} state: The store state
+ */
+export const AppStore = new Vuex.Store({
+
+    state: {
+        dateRange: {
+            start: today,
+            end: moment().add(30, 'days').toDate()
+        },
+
+        calorie_intake: 2000,
+
+        userStats: {
+            height: 175, // height in centimeters
+            weight: 69, // BW in lbs
+            age: 18,  // Age in years
+            is_male: true,  // sex (default: male)
+            pal: 1.53
+        }
+    },
+
+    getters: {
+        rangeScope: (state)=> ()=> {
+            return R.tryCatch(
+                getRangeScope,
+                ()=> []
+            )(state)
+        },
+        rangeScopeNodes: (state, getters)=> {
+            return ()=> getters.rangeScope().map((i)=> new RangeNode.map(i))
+        }
+    },
+
+    mutations: {
+        setDateRange (state, payload) {
+            state.dateRange = {
+                start: today,
+                end: moment(payload.end).toDate()
+            }
+        },
+
+        setIntake (state, payload) {
+            state.calorie_intake = !isNaN(Number(payload)) ? Number(payload) : 2000
+        },
+
+        setStats (state, payload) {
+            const newStats = R.mergeDeepRight(state.userStats, payload)
+            state.stats = newStats
+        }
+    },
+
+    actions: {
+
+        setDateRange (context) {
+            /**
+             * @param context {Object}: An object w/ 'commit' method
+             * @returns {void}
+             */
+            context.commit('setDateRange')
+        }
+    }
+})
+
+
+
+const deltaDays = (start, end)=> Math.abs(
+    moment(start).diff(moment(end), 'days')
+)
+
+const relativeDate = (start_date)=> (index)=> (
+    moment(start_date).add(index, 'days').toDate()
+)
+
+const userStatsProp = R.prop('stats')
+
+const dateRangeProp = R.prop('dateRange')
+const endDate = R.compose(R.prop('end'), dateRangeProp)
+const startDate = R.compose(R.prop('start'), dateRangeProp)
+
+const isNumber = R.compose(R.equals('Number'), R.type)
+
+const repeatN = (fn, n)=> {
+    if (!isNumber(n)) {
+        throw new TypeError(`
+            repeatN expected 'n' to be a Number. 
+            Received type ${R.type(n)} instead.
+            The value of "n": ${n}
+        `)
+    }
+    let accum = []
+    let i = 0
+    while (i < n) {
+        accum.push(fn())
+        i++
+    }
+    return accum
+}
+
+
+
 /**
  * @class RangeNode: A functor that facilitates rangeScope (see below)
  * @param intake {Number}: Calorie intake
@@ -33,43 +139,6 @@ export class RangeNode {
     }
 }
 
-const deltaDays = (start, end)=> Math.abs(
-    moment(start).diff(moment(end), 'days')
-)
-
-const relativeDate = (start_date)=> (index)=> moment(start_date).add(index, 'days').toDate()
-
-
-const userStatsProp = R.prop('userStats')
-
-// const userWeight = R.compose(R.prop('weight'), userStatsProp)
-// const userHeight = R.compose(R.prop('height'), userStatsProp)
-// const userAge = R.compose(R.prop('age'), userStatsProp)
-// const userIsMale = R.compose(R.prop('is_male'), userStatsProp)
-// const userPal = R.compose(R.prop('pal'), userStatsProp)
-
-const dateRangeProp = R.prop('dateRange')
-const endDate = R.compose(R.prop('end'), dateRangeProp)
-const startDate = R.compose(R.prop('start'), dateRangeProp)
-
-const isNumber = R.compose(R.equals('Number'), R.type)
-
-const repeatN = (fn, n)=> {
-    if (!isNumber(n)) {
-        throw new TypeError(`
-            repeatN expected 'n' to be a Number. 
-            Received type ${R.type(n)} instead.
-            The value of "n": ${n}
-        `)
-    }
-    let accum = []
-    let i = 0
-    while (i < n) {
-        accum.push(fn())
-        i++
-    }
-    return accum
-}
 
 const getRangeScope = (scope)=> {
     try {
@@ -77,6 +146,14 @@ const getRangeScope = (scope)=> {
         const start_date = startDate(scope)
         const end_date = endDate(scope)
         const statsProp = userStatsProp(scope)
+
+        if (!statsProp) {
+            // If we don't have user stats, then
+            // we can't produce results.
+            // Once the child components push their
+            // state up the chain, we will have user stats
+            return []
+        }
 
         const startExpenditure = new TotalExpenditure(
             statsProp.weight,
@@ -102,88 +179,7 @@ const getRangeScope = (scope)=> {
             }))
             
     } catch(err) {
-        console.error(err)
+        console.warn(err)
         throw(err)
     }
 }
-
-
-const passiveMerge = (main)=> R.pipe(
-    R.mergeDeepRight(main),
-    R.pick(Object.keys(main))
-)
-
-const toPlainObj = (obj)=> JSON.parse(JSON.stringify(obj))
-
-
-
-
-// App store/model
-export const AppStore = new Vuex.Store({
-
-    // Docs: https://vuex.vuejs.org/guide/state.html
-    state: {
-        dateRange: {
-            start: moment().toDate(),
-            end: moment().add(30, 'days').toDate()
-        },
-
-        calorie_intake: 20000,
-
-        userStats: {
-            height: 175, // height in centimeters
-            weight: 69, // BW in KG
-            age: 18,  // Age in years
-            is_male: true,  // sex (default: male)
-            pal: 1.53
-        }
-    },
-
-    // Docs: https://vuex.vuejs.org/guide/getters.html
-    getters: {
-        rangeScope: (state)=> ()=> {
-            return getRangeScope(
-                toPlainObj(state)
-            )
-        },
-        rangeScopeNodes: (state, getters)=> {
-            return ()=> getters.rangeScope().map((i)=> new RangeNode.map(i))
-        }
-    },
-
-    // NOTE: Mutations must be synchronous
-    // Docs: https://vuex.vuejs.org/guide/mutations.html
-    mutations: {
-        setDateRange (state, payload) {
-            state.dateRange = {
-                start: moment().toDate(),
-                end: moment(payload.end).toDate()
-            }
-        },
-
-        setIntake (state, payload) {
-            state.calorie_intake = !isNaN(Number(payload)) ? Number(payload) : 2000
-        },
-
-        setStats (state, payload) {
-            const newStats = passiveMerge(state.userStats, payload)
-            state.stats = newStats
-        }
-    },
-
-    // NOTE: Actions are how you can perform async
-    // operations, which then update the state via synchronous mutations
-    // Docs: https://vuex.vuejs.org/guide/actions.html
-    actions: {
-
-        setDateRange (context) {
-            /**
-             * @param context {Object}: An object w/ 'commit' method
-             * @returns {void}
-             */
-            context.commit('setDateRange')
-        }
-    }
-})
-
-

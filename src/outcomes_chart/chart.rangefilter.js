@@ -1,3 +1,4 @@
+const R = require('ramda');
 const moment = require('moment');
 
 
@@ -50,9 +51,8 @@ const incrementArr = [
     ]
 ]
 
-const today = moment().toDate()
 
-const maxLength = 75
+const maxLength = 30
 
 export class RangeFilter {
     constructor(dateRange, lens=R.prop('date')) {
@@ -73,11 +73,6 @@ export class RangeFilter {
             if (maxVal <= minMax.max
                 || (maxVal / minMax.len) < maxLength) {
                 // incrementInstance = i
-                console.log(`
-                    maxVal >= minMax.min:
-                        maxVal: ${maxVal}
-                        minMax.min: ${minMax.max}
-                `)
                 return i
             }
         }
@@ -127,7 +122,6 @@ export class RangeFilter {
                 // If the date lines up with the next date increment,
                 // add this index to our indexAccum Array
                 // and get the next valid date
-                console.log(`validIncrement: ${i}`)
                 indexAccum.push(i)
                 nextIncrement = this._getNextIncrement(indexDate, momentParams)
 

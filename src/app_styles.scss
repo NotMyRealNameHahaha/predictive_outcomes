@@ -1,9 +1,178 @@
+$primary: #232F34;
+$secondary:#039BE5;
+
+$mdc-theme-primary: $primary;
+$mdc-theme-secondary: $secondary;
+$mdc-theme-background: #212121;
+$mdc-theme-surface: #212121;
+$text-on-dark: #fbfbfb;
+
+$ct-series-colors: (
+    $secondary,
+    #d70206,
+    #f05b4f,
+    #f4c63d,
+    #d17905,
+    #453d3f,
+    #59922b,
+    #0544d3,
+    #6b0392,
+    #f05b4f,
+    #dda458,
+    #eacf7d,
+    #86797d,
+    #b2c326,
+    #6188e2,
+    #a748ca
+) !default;
+
+$ct-text-color: rgba($text-on-dark, 0.4);
+$ct-grid-color: rgba($text-on-dark, 0.15);
+
 @import "material-components-web/material-components-web";
 @import 'chartist/dist/scss/chartist.scss';
+
+
+@function first($list) {
+    @return nth($list, 1);
+}
+
+.pad--5 { padding: 5px; }
+.pad--10 { padding: 10px; }
+.pad--15 { padding: 15px; }
+.pad--20 { padding: 20px; }
+.pad--25 { padding: 25px; }
+
+@each $size in 5, 10, 15, 20, 25, 30, 35, 40, 45, 50 {
+    .pad--#{$size} {
+        padding: #{$size}px;
+    }
+
+    .pad--v-#{$size} {
+        padding-top: #{$size}px;
+        padding-bottom: #{$size}px;
+    }
+
+    .pad--h-#{$size} {
+        padding-left: #{$size}px;
+        padding-right: #{$size}px;
+    }
+
+    //-- Margin
+    .margin--#{$size} {
+        margin: #{$size}px;
+    }
+
+    .margin--v-#{$size} {
+        margin-top: #{$size}px;
+        margin-bottom: #{$size}px;
+    }
+
+    .margin--h-#{$size} {
+        margin-left: #{$size}px;
+        margin-right: #{$size}px;
+    }   
+}
+
+
+//-- Sizing Helpers
+.i-flex {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+.flex {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+
+// Flex align/justify
+.ac { align-content: center; align-items: center; }
+.jc { justify-content: center; justify-items: center; }
+
+.as {  align-content: flex-start; align-items: flex-start; }
+.js { justify-content: flex-start; justify-items: flex-start; }
+
+
+.ae {  align-content: flex-end; align-items: flex-end; }
+.je { justify-content: flex-end; justify-items: flex-end; }
+
+
 
 .mauto {
     margin: auto;
 }
 
+.rel {
+    position: relative;
+}
 
 
+.row {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+    overflow-x: hidden;
+    display: block;
+}
+
+body {
+    background: $mdc-theme-background;
+}
+
+
+//-- Chart Styles
+//*============================================*//
+.chart--container {
+    margin: 20px auto;
+}
+
+.chartist-tooltip {
+    position: absolute;
+    font-size: 12px;
+    color: white;
+    background: transparent;
+
+    .chartist-tooltip-value {
+        display: block;
+        width: auto;
+        height: auto;
+    }
+
+    .chart--tooltip-body {
+        padding: 12px;
+        background: #232F34;
+    }
+}
+
+//-- Axis labels
+.ct-axis-title {
+    color: $text-on-dark;
+    fill: $text-on-dark;
+}
+
+//-- Points along the line graph
+.point--custom.ct-area {
+    fill-opacity: 0.9;
+}
+
+
+
+/* Font-Helpers
+*=============================*/
+
+/* Rules for sizing the icon. */
+.material-icons.md-18 { font-size: 18px; }
+.material-icons.md-24 { font-size: 24px; }
+.material-icons.md-36 { font-size: 36px; }
+.material-icons.md-48 { font-size: 48px; }
+
+/* Rules for using icons as black on a light background. */
+.material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+.material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
+/* Rules for using icons as white on a dark background. */
+.material-icons.md-light { color: rgba(255, 255, 255, 1); }
+.material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }

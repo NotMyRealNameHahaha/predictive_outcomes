@@ -2,6 +2,11 @@ const R = require('ramda');
 const moment = require('moment');
 import Vue from 'vue';
 import { MDCSlider } from '@material/slider';
+import {MDCSelect} from '@material/select';
+import {MDCTextField} from '@material/textfield';
+import {MDCFormField} from '@material/form-field';
+import {MDCRadio} from '@material/radio';
+
 
 // App
 import { AppStore } from '../outcomes_component/app.store';
@@ -10,11 +15,13 @@ import { TotalExpenditure, weightDiffKilos } from '../common/bmr';
 // Templates
 import { DateForm } from './predictors.date.form';
 import { IntakeForm } from './predictors.intake.form';
-import { PhysicalActivityForm } from './predictors.date.form';
+import { PhysicalActivityForm } from './predictors.pal.form';
 import { UserForm } from './predictors.userform';
 
 import * as utils from '../common/utils';
 
+
+// Templates
 export const PredictorsTemplate = `<predictors-component></predictors-component>`
 
 export const formTemplate = [
@@ -24,45 +31,6 @@ export const formTemplate = [
     UserForm
 ].map(R.prop('template')).join('')
 
-/**
-    MDC Cheat Sheet
-
-    //-- Slides
-    // import { MDCSlider } from '@material/slider';
-    const dayRangeSlider = document.querySelector('[ref="PredictorsComponent.dayrange"]')
-    const slider = new MDCSlider(dayRangeSlider)
-    slider.listen('MDCSlider:change', ()=> console.log(`Value changed to ${slider.value}`))
-
-
-    // Select
-    // import {MDCSelect} from '@material/select';
-    const palSelect = document.querySelector('[ref="PredictorsComponent.pal"]')
-    const select = new MDCSelect(palSelect)
-
-    select.listen('MDCSelect:change', () => {
-        console.log(
-            `Selected option at index ${select.selectedIndex} with value "${select.value}"`
-        )
-    })
-
-
-    // Text input
-    // import {MDCTextField} from '@material/textfield';
-    const myTextInput = document.querySelector('.mdc-text-field')
-    const textField = new MDCTextField(myTextInput)
-  */
-
-
-const initSlider = (el)=> {
-    const slider = new MDCSlider(el)
-    return {
-        el: el,
-        slider: slider
-    }
-}
-
-
-const sortByDate = R.sortBy(R.prop('date'))
 
 const today = moment().toDate()
 
@@ -70,10 +38,16 @@ const toInches = (feet, inches=0)=> (12 * feet) + inches
 const toCm = R.multiply(2.54)
 
 
+
+
+/**
+ * @export PredictorsComponent {Vue.component}
+ * *
+ */
 export const PredictorsComponent = Vue.component('predictors-component', {
     data: function() { return {
         dateRange: 30,
-        calorie_intake: 2000,
+        calorie_intake: AppStore.state.calorie_intake,
 
         // TODO: Map this to userStats.is_male
         sex: 'male',
@@ -84,26 +58,15 @@ export const PredictorsComponent = Vue.component('predictors-component', {
             inches: 7
         },
 
-        userStats: {
-            // height: 175, // height in centimeters
-            weight: 69, // BW in KG
-            age: 18,  // Age in years
-            is_male: true,  // sex (default: male)
-            pal: 1.53
-        }
+        userStats: AppStore.state.userStats
     }},
 
     watch: {
         calorie_intake: function(val) {
-            console.log('calorie_intake')
             AppStore.commit('setIntake', Number(val))
         },
 
         dateRange: function(val) {
-            // AppStore.state.dateRange = Number(val)
-            console.log('dateRange')
-            console.log(this.dateRange)
-
             const diff = moment(today).add(this.dateRange, 'days').toDate()
 
             AppStore.commit('setDateRange', {
@@ -127,14 +90,13 @@ export const PredictorsComponent = Vue.component('predictors-component', {
 
     methods: {
         pushState: function() {
-            console.log('pushState()')
             const stats = this.userStats
             const calcHeight = toCm(
                 toInches(Number(this.height.feet), Number(this.height.inches))
             )
 
             const newStats = {
-                weight: Number(stats.weight) / 2.2,
+                weight: Number(stats.weight),
                 age: Number(stats.age),
                 is_male: (stats.sex === 'male'),
                 pal: Number(stats.pal),
@@ -150,36 +112,68 @@ export const PredictorsComponent = Vue.component('predictors-component', {
                 end: moment(today).add(this.dateRange, 'days').toDate()
             })
 
+        },
+
+        onDateChange: function(mdc_slider) {
+            this.dateRange = mdc_slider.value
         }
     },
 
-    template: `<div id="predictors-component--container">${formTemplate}</div>`,
+    template: `
+        <div id="predictors-component--container"
+                class="mdc-layout-grid">
+            <div class="mdc-layout-grid__inner">
+                ${formTemplate}        
+            </div>
+        </div>
+    `,
 
     mounted: function() {
         const _this = this
-        console.log('mounted')
-        window._PredictorsComponent = this
+        // Let the DOM render & all the other initialization occur,
+        // then setup our MDC components.  The slight delay helps
+        // prevent resizing related issues
+        utils.deferFn(()=> initMdcComponents(_this.$refs, _this.onDateChange))
 
         utils.deferFn(()=> _this.pushState())
-
-        const sliderRef = DateForm.ref
-        const sliderEl = this.$refs[sliderRef]
-        const _mdcSlider = initSlider(sliderEl).slider
-
-        _mdcSlider.listen('MDCSlider:change', utils.debounce(
-            ()=>  _this.dateRange = _mdcSlider.value,
-            50
-        ))
     },
 
     updated: function() {
-        console.log('updated')
-        window._PredictorsComponent = this
         this.pushState()
     }
 })
 
-window._PredictorsComponent = PredictorsComponent
-window._store = AppStore
-window.moment = moment
-window.R = R
+
+
+
+const initMdcComponents = (refs, onDateChange)=> {
+    /** Setup MDC components after the form elements are rendered
+     */
+    const palSelect = refs[PhysicalActivityForm.ref]
+    new MDCSelect(palSelect.parentElement)
+
+    utils.cEls('.mdc-text-field')().forEach((i)=> new MDCTextField(i))
+    utils.cEls('.mdc-radio')().forEach((i)=> new MDCRadio(i))
+    utils.cEls('.mdc-form-field')().forEach((i)=> new MDCFormField(i))
+
+    // Set up the date Slider
+    const sliderRef = DateForm.ref
+    const sliderEl = refs[sliderRef]
+    const _mdcSlider = initSlider(sliderEl).slider
+
+    _mdcSlider.listen('MDCSlider:change', utils.debounce(
+        ()=> onDateChange(_mdcSlider), 50
+    ))
+
+    _mdcSlider.layout()
+}
+
+
+const initSlider = (el)=> {
+    const slider = new MDCSlider(el)
+    return {
+        el: el,
+        slider: slider
+    }
+}
+
