@@ -1,0 +1,79 @@
+@import 'styles/constants';
+
+
+@mixin goldenHexagonText {
+    text-align: center;
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    justify-items: center;
+}
+
+
+/**
+ * Example:
+ * <div class="my-hexagon-container">
+ *     <div class="hexagon--text">
+ *         Display this dead-center in the hexagon
+ *     </div>
+ * </div>
+ * // In your scss:
+ * .my-hexagon-container {
+ *     // Make the hexagon 500px wide w/ a black background
+ *     @include goldenHexagon(500px, black);
+ * }
+ */
+@mixin goldenHexagon($width: 200px, $background: white) {
+    $diameter: $width;
+    // Hardcoded values (1.27 & 0.866) is obtained from 
+    // this Geometric calculator: https://www.omnicalculator.com/math/hexagon
+    $hexagon-side-long: $diameter * 1.27;
+    $hexagon-side-short: $diameter * 0.866;
+    $border-x: calc(#{$hexagon-side-short} / 2) solid transparent;
+    $border-y: #{$hexagon-side-short / 4} solid $background;
+
+    $height: calc(#{$hexagon-side-short} / #{$phi});
+    $rectangle-width: #{$hexagon-side-short};
+
+    position: relative;
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+    align-content: center;
+    margin: auto;
+
+    background: $background;
+
+    max-width: 100%;
+    max-height: 100%;
+    width: $rectangle-width;
+    height: $height;
+
+    &::before, &::after {
+        content: '';
+        position: absolute;
+        border-left: $border-x;
+        border-right: $border-x;
+        left: 0;
+    }
+
+    &::before {
+        bottom: 100%;
+        border-bottom: $border-y;
+    }
+
+    &::after {
+        top: 100%;
+        border-top: $border-y;
+    }
+
+
+    // Wrap your text in a div w/ this class
+    .hexagon--text {
+        @include goldenHexagonText;
+    }
+}

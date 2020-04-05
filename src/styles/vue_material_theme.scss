@@ -1,0 +1,24 @@
+/**
+ * @module vue_material_theme.scss - Entry point for Vue Material Theme & styles
+ * Theme colors & configuration lives here
+ * NOTE: This is available globally via site/app.js
+ */
+@import "~vue-material/dist/theme/engine"; // Import the theme engine
+@import "./colors";
+
+
+@include md-register-theme("default", (
+    primary: $primary, // The primary color of your application
+    accent: $secondary,
+//   theme: dark
+    theme: light
+));
+
+@import "~vue-material/dist/theme/all"; // Apply the theme
+
+// Global compliments/overrides
+
+
+.md-divider {
+    min-height: 1px;
+}

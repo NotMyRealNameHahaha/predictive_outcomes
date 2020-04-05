@@ -1,0 +1,22 @@
+$icon-size: 1.5rem;
+
+@mixin iconProps() {
+    width: auto;
+    height: $icon-size;
+    max-width: 100%;
+    max-height: 100%;
+    font-size: $icon-size;
+    line-height: $icon-size;
+}
+
+.cac-icon {
+    @include iconProps();
+    text-align: center;
+
+    .icon-font,
+    .icon-svg {
+        @include iconProps();
+        margin: auto;
+        display: inline;
+    }
+}

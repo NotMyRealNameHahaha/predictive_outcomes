@@ -1,0 +1,109 @@
+$visibleOpacity: 0.23;
+$halfOpacity: $visibleOpacity / 2;
+
+@keyframes dash {
+    from {
+        stroke-dashoffset: 1010;
+        opacity: $halfOpacity;
+    }
+    to {
+        stroke-dashoffset: 0;
+        opacity: $visibleOpacity;
+    }
+}
+
+@mixin animatedPath {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: dash 2s ease-in forwards;
+    animation-delay: 1s;
+}
+
+
+// Spinners
+@keyframes rotate {
+    from {
+        transform: rotate(360deg);
+    }
+    
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+
+@mixin rotate($duration: 1s) {
+    animation: rotate #{$duration} infinite reverse;
+}
+
+
+
+// -- Size transitions
+@mixin shrinkSize($n: 0) {
+    transform: scale($n);
+}
+
+@mixin normalSize($n: 1) {
+    transform: scale($n);
+}
+
+
+.m-height--100vh {
+    max-height: 100vh;
+}
+
+// Grow transform/transition
+// Vue usage:
+// <transition appear name="grow"></transition>
+.grow-enter-active, .grow-leave-active {
+    @include normalSize;
+    transition: transform 0.3s;
+}
+
+.grow-enter, .grow-leave-to {
+    @include shrinkSize;
+}
+
+
+// Slide on in
+@mixin slideIn($distance: 200vw, $factor: 1, $duration: 0.3s) {
+    $origin: $distance * $factor;
+
+    @keyframes slideFrame {
+        from {
+            transform: translate($origin);
+        }
+    
+        to {
+            transform: translate(0);
+        }
+    }
+
+    animation: slideFrame #{$duration};
+
+    .slide-in {
+        animation: slideFrame #{$duration};
+    }
+}
+
+
+@mixin slideOut($distance: 200vw, $factor: -1, $duration: 0.3s) {
+    $origin: $distance * $factor;
+
+    @keyframes slideFrame {
+        to {
+            transform: translate(0);
+        }
+        from {
+            transform: translate($origin);
+        }
+    
+    }
+
+    animation: slideFrame #{$duration};
+
+    .slide-out {
+        animation: slideFrame #{$duration};
+    }
+
+}

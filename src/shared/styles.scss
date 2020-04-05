@@ -1,0 +1,91 @@
+@import "../styles/vue_material_theme.scss";
+@import '~animate.css';
+@import "../styles/index";
+@import "../styles/animations";
+
+
+* {
+    box-sizing: border-box;
+}
+
+.md-app .md-content.md-app-content {
+    padding: initial;
+}
+
+.md-app-scroller.md-scrollbar.md-layout-column {
+    width: 100%;
+}
+
+
+.md-drawer {
+    width: 20rem;
+    max-width: calc(100vw - 5rem);
+}
+
+.cac-nav--icon {
+    font-size: 30px !important;
+}
+
+
+$phi-radius: percentage($phi / 10);
+
+.cac--toolbar.md-app-toolbar.md-toolbar {
+    // width: 4.5rem;
+    top: 0;
+    position: absolute;
+    box-shadow: initial;
+    // border-bottom-right-radius: $phi-radius;
+}
+
+
+$duration: 0.5s;
+$distance: 200vw;
+
+.app-loader {
+
+    &.off-page {
+        // @include slideOut($distance, -1, $duration);
+        transform: translate(#{$distance * -1.25});
+        // animation-timing-function: ease-in;
+        transition: all $duration ease-in;
+    }
+}
+
+.page-container {
+    // height: 100vh;
+    // max-height: 100%;
+    max-width: 100%;
+}
+
+.layout {
+    width: 100%;
+
+    .logo--text {
+        font-size: 2rem;
+        line-height: 100%;
+        color: $primary;
+    }
+
+    .md-toolbar.md-primary.md-theme-default {
+        @extend .bg--content-background;
+
+        .md-toolbar-row {
+            justify-content: center;
+        }
+    }
+}
+
+
+//-- App Body
+.main-content {
+    // background: $mdc-theme-background;
+    // padding: 0 4rem;
+}
+
+.app-content {
+    // padding: 2rem;
+}
+
+.chart--container {
+    margin: 20px auto;
+}

@@ -1,0 +1,21 @@
+$min: -1;
+$root-index: 0;
+
+
+@for $n from 0 through 10 {
+    $value: $n * 10;
+    $overlay: $value + 1;
+    $block: $overlay + 1;
+
+    .z-#{$n} {
+        z-index: #{$value};
+    }
+
+    .z-#{$n}--overlay {
+        z-index: #{$overlay};
+    }
+
+    .z-#{$n}--block {
+        z-index: #{$block};
+    }
+}

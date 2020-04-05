@@ -1,0 +1,97 @@
+@import 'styles/constants';
+
+/**
+ * Rough Visual representation:
+ * |------------------------------------|
+ * |                |                   |
+ * |                |                   |
+ * |                |   RIGHT TOP       |
+ * |    LEFT        |   (13x13)         |
+ * |    (21x21)     |-------------------|
+ * |                |   RIGHT BOTTOM    |
+ * |                |   (13W x 8H)      |
+ * |------------------------------------|
+ *
+ */
+
+
+$left-width: 21;
+$left-height: $left-width;
+
+$right-top-width: 13;
+$right-top-height: 13;
+
+$right-bottom-width: $right-top-width;
+$right-bottom-height: 8;
+
+
+$total-height: $left-height;
+
+$width-cell-count: $left-width + $right-top-width;
+$height-cell-count: $left-height;
+
+
+
+@mixin maxDimensions() {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+@mixin goldenContainer() {
+    @include maxDimensions();
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: flex-start;
+}
+
+
+@mixin goldenLeft() {
+    @include maxDimensions();
+    width: percentage($left-width / $width-cell-count);
+    height: 100%;
+}
+
+
+@mixin goldenRight() {
+    width: percentage($right-top-width / $width-cell-count);
+    height: 100%;
+}
+
+
+@mixin goldenRightTop() {
+    @include maxDimensions();
+    width: percentage($right-top-width / $width-cell-count);
+    height: percentage($right-top-height / $height-cell-count);
+}
+
+
+@mixin goldenRightBottom() {
+    @include maxDimensions();
+    width: percentage($right-bottom-width / $width-cell-count);
+    height: percentage($right-bottom-height / $height-cell-count);
+}
+
+
+.golden--container {
+    @include goldenContainer();
+
+    .golden--left {
+        @include goldenLeft();
+    }
+
+    // Use golden--right if you don't want to split the right rectangle into two sections
+    .golden--right {
+        @include goldenRight();
+    }
+
+    .golden--right-top {
+        @include goldenRightTop();
+    }
+
+    .golden--right-bottom {
+        @include goldenRightBottom();
+    }
+}

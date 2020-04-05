@@ -1,0 +1,150 @@
+@import "../styles/display";
+@import "../styles/sizing";
+@import "../styles/spacing";
+@import "../styles/colors";
+@import "./_breakpoints";
+
+
+$sizes: (
+    ('xsmall', $md-breakpoint-xsmall),
+    ('small', $md-breakpoint-small),
+    ('medium', $md-breakpoint-medium),
+    ('large', $md-breakpoint-large)
+);
+
+
+@each $size in $sizes {
+    $name: nth($size, 1);
+    $value: nth($size, 2);
+
+    @media (max-width: $value) {
+        .nowrap--#{$name} {
+            flex-wrap: nowrap;
+        }
+
+        .wrap--#{$name} {
+            flex-wrap: wrap;
+        }
+    }
+}
+
+
+$pad: 1.0rem;
+$pad-half: $pad / 2;
+
+
+.frac {
+    font-weight: initial;
+    font-size: 0.8rem;
+    padding-left: $pad-half;
+    padding-right: $pad-half;
+}
+
+
+// Content/Text
+
+// <blockquote>
+.note-block {
+    margin: 1rem 0;
+    padding: 1rem;
+    overflow: hidden;
+    border-left: 0.3rem solid $primary-light;
+    background: rgb(238, 238, 238);
+}
+
+
+// <code>
+.app--code {
+    white-space: initial;
+    padding: 1.0rem 0.5rem;
+    background-color: $mdc-theme-background;
+}
+
+
+//-- Transitions & Animations
+
+// Enter
+@keyframes slideInFromRight {
+    from {
+        transform: translate3d(100vw, 0, 0);
+    }
+
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@mixin slideInRight {
+    animation-name: slideInFromRight;
+}
+
+
+// Exit
+@keyframes slideOutToLeft {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+
+    to {
+        transform: translate3d(-100vw, 0, 0);
+    }
+}
+
+
+@mixin slideOutLeft {
+    animation-name: slideOutToLeft;
+}
+
+
+
+// -- Base animation class
+@mixin animated ($duration: 0.4s, $delay: 0.2s){
+    animation-duration: #{$duration};
+    animation-fill-mode: both;
+    animation-delay: #{$delay};
+}
+
+// slide transform/transition
+.slide-enter-active {
+    @include slideInRight;
+    @include animated;
+}
+
+.slide-leave-active {
+    @include slideOutLeft;
+    @include animated;
+}
+
+
+// Faster variation
+.slide-fast-enter-active {
+    @include slideInRight;
+    @include animated(0.2s, 0.1s);
+}
+
+.slide-fast-leave-active {
+    @include slideOutLeft;
+    @include animated(0.2s, 0.1s);
+}
+
+
+// Slower variation
+.slide-slow-enter-active {
+    @include slideInRight;
+    @include animated(1s, 0.5s);
+}
+
+.slide-slow-leave-active {
+    @include slideOutLeft;
+    @include animated(1s, 0.5s);
+}
+
+/**
+ * Vue-slider styles
+ * Source: https://github.com/NightCatSama/vue-slider-component/blob/master/lib/theme/default.scss
+ */
+
+$themeColor: $primary-light;
+
+
+@import '~vue-slider-component/lib/theme/antd.scss';

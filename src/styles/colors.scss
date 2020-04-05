@@ -1,0 +1,126 @@
+@import './luminance';
+
+$shade-offset: 10;
+// $primary: #37474f;
+// $primary-light: #62727b;
+// $primary-dark: #102027;
+$primary: #1b2a2f;
+$primary-light: lighten($primary, $shade-offset);
+$primary-dark: darken($primary, $shade-offset);
+
+$secondary:#dd2c00;
+$secondary-light: #ff6434;
+$secondary-dark: #a30000;
+
+$mdc-theme-primary: $primary;
+$mdc-theme-secondary: $secondary;
+$mdc-theme-background: #fbfbfb;
+$mdc-theme-surface: #f5f5f6;
+
+$text-on-dark: #fbfbfb;
+$text-on-primary: #fbfbfb;
+$text-on-secondary: #fbfbfb;
+
+$background: $mdc-theme-background;                             // Pretty much white
+$surface: #f5f5f6;                                            // Slightly off-white
+$content-background: darken($background, $shade-offset / 2);    // Almost light grey
+
+$error: #C62828;
+
+$white: #fff;
+$black: #000;
+
+$text-on-dark: #fbfbfb;
+$text-on-primary: #fbfbfb;
+$text-on-secondary: #fbfbfb;
+
+
+$base_colors: (
+    ('primary', $primary),
+    ('secondary', $secondary),
+    ('background', $background),
+    ('content-background', $content-background),
+    ('surface', $surface)
+);
+
+$colors: (
+    ('primary', $primary),
+    ('primary-light', $primary-light),
+    ('primary-dark', $primary-dark),
+    ('secondary', $secondary),
+    ('secondary-light', $secondary-light),
+    ('secondary-dark', $secondary-dark),
+    ('background', $background),
+    ('content-background', $content-background),
+    ('surface', $surface),
+    ('error', $error),
+    ('white', $white),
+    ('black', $black)
+);
+
+
+
+// Map color names to background & text classes
+@each $color in $colors {
+    $name: nth($color, 1);
+    $val: nth($color, 2);
+    $variations: (
+        ('', $val),
+        ('-dark', darken($val, $shade-offset)),
+        ('-light', lighten($val, $shade-offset))
+    );
+
+    @each $type in $variations {
+        $typeName: nth($type, 1);
+        $typeValue: nth($type, 2);
+
+        // .bg--primary
+        .bg--#{$name}#{$typeName},
+        .bg--#{$name}#{$typeName},
+        .md-theme-default .bg--#{$name}#{$typeName},
+        .md-theme-default .bg--#{$name}#{$typeName} {
+            // color: { white or black depending upon $primary }
+            @include text-contrast($typeValue);
+            // background: { $primary }
+            background: $typeValue;
+        }
+
+        // .text--primary
+        .text--#{$name}#{$typeName},
+        .md-theme-default .text--#{$name}#{$typeName} {
+            // color: $primary;
+            color: $typeValue;
+        }
+    }
+}
+
+/**
+ * Chartist colors
+ */
+$ct-series-colors: (
+    $secondary,
+    $primary,
+    $error,
+    lighten($primary-light, $shade-offset),
+    lighten($secondary-light, $shade-offset),
+    #3949AB,
+    #039BE5,
+    #43A047,
+    #E53935,
+    #1E88E5,
+    #FFB300,
+    #D81B60,
+    #8E24AA,
+    #00ACC1,
+    #FDD835,
+    #546E7A,
+    #7CB342,
+    #F4511E,
+    #00897B,
+    #FB8C00,
+    #C0CA33
+) !default;
+
+
+$ct-text-color: rgba($text-on-dark, 0.4);
+$ct-grid-color: rgba($text-on-dark, 0.15);

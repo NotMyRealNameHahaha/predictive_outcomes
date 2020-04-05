@@ -1,0 +1,105 @@
+// Helper classes for the 'display' property
+
+.block { display: block; }
+.inline-block { display: inline-block; }
+
+.i-flex {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.flex {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+
+//-- Directions
+.flex--reverse, .flex--row-reverse {
+    flex-direction: row-reverse;
+}
+
+.flex--column {
+    flex-direction: column;
+}
+
+.flex--column-reverse {
+    flex-direction: column-reverse;
+}
+
+
+.nowrap, .flex.nowrap, .i-flex.nowrap {
+    flex-wrap: nowrap;
+}
+
+// Flex align/justify
+$flex-directions: (
+    ('center', center),
+    ('end', flex-end),
+    ('start', flex-start),
+    ('normal', normal),
+    ('space-around', space-around),
+    ('space-between', space-between),
+    ('space-evenly', space-evenly),
+    ('stretch', stretch)
+);
+
+
+$flex-props: (
+    align-content,
+    align-items,
+    justify-content,
+    justify-items   
+);
+
+
+@each $prop in $flex-props {
+    @each $direction in $flex-directions {
+        $name: nth($direction, 1);
+        $val: nth($direction, 2);
+
+        // .flex--align-items-center
+        .flex--#{$prop}-#{$name} {
+            // align-items: center;
+            #{$prop}: $val;
+        }
+    }
+}
+
+
+.flex--align-center, .ac { align-content: center; align-items: center; }
+.flex--justify-center, .jc { justify-content: center; justify-items: center; }
+
+.flex--align-start, .as {  align-content: flex-start; align-items: flex-start; }
+.flex--justify-start, .js { justify-content: flex-start; justify-items: flex-start; }
+
+
+.flex--align-end, .ae {  align-content: flex-end; align-items: flex-end; }
+.flex--justify-end, .je { justify-content: flex-end; justify-items: flex-end; }
+
+
+
+.flex--justify-between { justify-content: space-between; }
+
+.flex--justify-around { justify-content: space-around; }
+
+.flex--justify-even, .flex--justify-evenly { justify-content: space-evenly; }
+
+
+
+
+
+.rel {
+    position: relative;
+}
+
+
+.row {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+    overflow-x: hidden;
+    display: block;
+}
+

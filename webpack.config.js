@@ -3,129 +3,102 @@ process.traceDeprecation = true
 const path = require('path');
 const webpack = require('webpack');
 const BundleTracker = require('webpack-bundle-tracker');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const autoprefixer = require('autoprefixer');
-
-const _PORT = 3000
-
-function tryResolve_(url, sourceFilename) {
-    // Put require.resolve in a try/catch to avoid node-sass failing with cryptic libsass errors
-    // when the importer throws
-    try {
-        return require.resolve(url, {
-            paths: [path.dirname(sourceFilename)]
-        });
-    } catch (e) {
-        return '';
-    }
-}
-
-function tryResolveScss(url, sourceFilename) {
-    // Support omission of .scss and leading _
-    const normalizedUrl = url.endsWith('.scss') ? url : `${url}.scss`
-    return tryResolve_(normalizedUrl, sourceFilename) ||
-        tryResolve_(path.join(path.dirname(normalizedUrl), `_${path.basename(normalizedUrl)}`),
-            sourceFilename)
-}
-
-function materialImporter(url, prev) {
-    if (url.startsWith('@material')) {
-        const resolved = tryResolveScss(url, prev)
-        return {
-            file: resolved || url
-        }
-    }
-    return {
-        file: url
-    }
-}
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 
+
+const isDev = process.env.NODE_ENV !== 'production'
+
+const outputDirectory = 'dist'
+const outputPath = path.resolve(__dirname, outputDirectory)
+const sourcePath = path.resolve(__dirname, 'src')
+
+
+// Module export
 module.exports = {
     context: __dirname,
-    mode: 'development',
-    
+    mode: isDev ? 'development': 'production',
+
     //-- App entry-points (bundles)
-    entry: {
-        outcomes_component: './src/outcomes_component/app.js',
-        app_styles: './src/app_styles.scss'
-    },
+    // entry: {
+    //     predictive_outcomes: './src/predictive_outcomes/app.js'
+    // },
+    
+    entry: './src/index.js',
 
     //-- Compilation destination resolution
     output: {
         filename: '[name].bundle.js',
-        path: path.resolve(__dirname, 'dist'),
+        chunkFilename: '[name].[hash].bundle.js',
+        path: outputPath,
         publicPath: '/'
     },
 
-    //-- Hot-Reload config
-    devServer: {
-        contentBase: path.join(__dirname, 'dist'),
-        compress: true,
-        port: _PORT,
-        hot: true,
-        // publicPath: _publicPath,
-        https: true,
-        index: '.dist/index.html',
-    },
-
-    plugins: [
-        new BundleTracker({
-            filename: './dist/webpack-stats.json'
-        }),
-        new CleanWebpackPlugin(['dist']),
-        new HtmlWebpackPlugin({
-            title: 'Predictive Outcomes'
-        })
-    ],
-
-    watchOptions: {
-        ignored: ['/node_modules/']
-    },
-
     module: {
-        rules: [{
-                test: /\.scss$/,
-                use: [{
-                        loader: 'file-loader',
+        rules: [
+            {
+                test: /\.vue$/,
+                loader: 'vue-loader',
+                sideEffects: true
+            },
+            {
+                test: /\.(sa|sc|c)ss$/,
+                use: [
+                    'vue-style-loader',
+                    {
+                        loader: MiniCssExtractPlugin.loader,
                         options: {
-                            name: 'bundle.css',
-                        },
+                            // only enable hot in development
+                            hmr: isDev,
+                            // if hmr does not work, this is a forceful method.
+                            reloadAll: true
+                        }
                     },
                     {
-                        loader: 'extract-loader'
-                    },
-                    {
-                        loader: 'css-loader'
-                    },
-                    {
-                        loader: 'postcss-loader',
+                        loader: 'css-loader',
                         options: {
-                            plugins: () => [
-                                autoprefixer()
-                            ]
+                            importLoaders: 1
                         }
                     },
                     {
                         loader: 'sass-loader',
                         options: {
-                            sourceMap: true,
-                            includePaths: ['./node_modules'],
-                            importer: materialImporter
+                            sourceMap: false
                         }
-                    },
+                    }
                 ]
             },
             {
                 test: /\.js$/,
                 exclude: /node_modules/,
-                // use: ['babel-loader'],
-                loader: 'babel-loader',
-                query: {
-                    presets: ['es2015'],
-                    plugins: ['transform-object-assign']
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        plugins: [
+                            [
+                                '@babel/plugin-proposal-class-properties',
+                                {
+                                    'loose': true
+                                }
+                            ],
+                            [
+                                '@babel/plugin-proposal-pipeline-operator',
+                                {
+                                    'proposal': 'fsharp'
+                                }
+                            ]
+                        ],
+
+                        presets: [
+                            '@babel/preset-env'
+                        ]
+                    }
                 },
+                sideEffects: true
             },
             {
 
@@ -138,7 +111,7 @@ module.exports = {
                 // Use url-loader for tiny files
                 test: /\.(png|jpg|gif)$/i,
                 use: [{
-                    loader: 'url-loader',
+                    loader: 'urlloader',
                     options: {
                         limit: 8192
                     }
@@ -150,11 +123,35 @@ module.exports = {
             }
         ]
     },
+
+    plugins: [
+        new MiniCssExtractPlugin({
+            filename: '[name].bundle.css',
+            chunkFilename: '[id].bundle.css',
+        }),
+        new CleanWebpackPlugin(),
+        new VueLoaderPlugin(),
+        new HtmlWebpackPlugin()
+    ],
+    
+    devServer: {
+        port: 3000,
+        open: true,
+        contentBase: path.join(__dirname, 'dist'),
+        hot: true,
+        // publicPath: _publicPath,
+        proxy: {
+            '/api': 'http://localhost:8080'
+        },
+    },
+
     resolve: {
         alias: {
-            'vue$': 'vue/dist/vue.esm.js'
-        },
-        extensions: ['.js']
+            'vue$': 'vue/dist/vue.esm.js',
+            'common': path.resolve(sourcePath, 'common'),
+            'styles': path.resolve(sourcePath, 'styles'),
+            'shared': path.resolve(sourcePath, 'shared')
+        }
     },
-    devtool: 'inline-source-map'
+    devtool: 'source-map'
 };

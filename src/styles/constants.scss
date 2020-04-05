@@ -1,0 +1,23 @@
+$phi: 1.6180339887498948482;
+
+@function timesPhi($n) {
+    @return $phi * $n;
+}
+
+@function divideByPhi($n) {
+    @return $n / $phi;
+}
+
+
+$small: 576px;
+$mobile: $small;
+
+$medium: 768px;
+$tablet: $medium;
+
+$large: 992px;
+$desktop: $large;
+
+$extra-large: 1200px;
+$xl: $extra-large;
+$tv: $extra-large;

@@ -1,0 +1,181 @@
+@import './sizing';
+
+
+h1, h2, h3, h4, h5, h6 {
+    margin: initial;
+}
+
+
+/* Font-Helpers
+*=============================*/
+
+/* Rules for sizing icons */
+.md-18 { font-size: 18px; }
+
+.md-24 { font-size: 24px; }
+
+.md-36 { font-size: 36px; }
+
+.md-48 { font-size: 48px; }
+
+/* Rules for using icons as black on a light background. */
+.md-dark { color: rgba(0, 0, 0, 0.54); }
+
+.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
+/* Rules for using icons as white on a dark background. */
+.md-light { color: rgba(255, 255, 255, 1); }
+
+.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+
+
+
+/** MDC helpers
+*===================*/
+
+// Make .app-fab--absolute buttons align to the bottom-right corner
+.app-fab--absolute {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+
+@media(min-width: 1024px) {
+    .app-fab--absolute {
+        bottom: 1.5rem;
+        right: 1.5rem;
+    }
+}
+
+
+//-- Font styles
+
+.text--underline {
+    text-decoration: underline;
+}
+
+
+.text--lowercase {
+    text-transform: lowercase;
+}
+
+.text--uppercase {
+    text-transform: uppercase;
+}
+
+.text--capitalize {
+    text-transform: capitalize;
+}
+
+
+//-- Whitespace
+$whitespaces: (
+    'nowrap',
+    'pre',
+    'pre-line',
+    'pre-wrap'
+);
+
+
+@each $space in $whitespaces {
+    .text--#{$space} {
+        white-space: $space;
+    }
+}
+
+
+//-- Families
+.text--mono {
+    font-family: Roboto Mono, Roboto, Noto Sans, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+
+//-- Font Weights
+$weight-xl: 200;  // Extra-light
+
+$weight-l: 300;   // Light
+
+$weight-r: 400;   // Regular
+
+$weight-m: 500;   // Medium
+
+$weight-h: 700;   // Heavy
+
+$weight-xh: 900;  // Extra-heavy
+
+
+.bold, .text--bold {
+    font-weight: $weight-r;
+    // font-weight: bold;
+}
+
+.bolder, .text--bolder {
+    font-weight: $weight-m;
+    // font-weight: bolder;
+}
+
+.boldest, .text--boldest {
+    font-weight: $weight-h;
+}
+
+//-- Font sizes
+$size-baseline: 1rem;
+
+
+@mixin fontWeight($n) {
+    @if $n < 3 {
+       font-weight: $weight-l;
+    }
+    @else if $n == 2 {
+        font-weight: $weight-m;
+    }
+    @else {
+        font-weight: $weight-r;
+    }
+}
+
+
+@for $n from 1 through 7 {
+    $distance: 8 - $n;
+    $size: $distance / $phi;
+
+    h#{$n}, .title--#{$n}{
+        // Set the Font size & weight for H1-H7
+        // Obviously H7 doesn't exist; but it gives us an extra size...
+        @include fontWeight($n);
+        font-size: #{$size}rem;
+        color: inherit;
+        line-height: initial;
+    }
+}
+
+
+@for $n from 1 through 10 {
+    $diff: $n * 10;
+    $size: percentage($n / 10);
+    $increase: calc(#{$size-baseline} + #{$size});
+    $decrease: calc(#{$size-baseline} - #{$size});
+
+    .text--increase-#{$diff} {
+        font-size: #{$increase};
+    }
+
+    .text--decrease-#{$diff} {
+        font-size: #{$decrease};
+    }
+}
+
+
+//-- Text alignment
+.text--left {
+    text-align: left;
+}
+
+.text--center {
+    text-align: center;
+}
+
+.text--right {
+    text-align: right;
+}

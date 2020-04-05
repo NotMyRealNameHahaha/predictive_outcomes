@@ -1,0 +1,43 @@
+@import './constants';
+
+$viewportSides: (
+    ('w', 'vw', 'width'),
+    ('h', 'vw', 'width'),
+    ('w', 'vh', 'height'),
+    ('h', 'vh', 'height')
+);
+
+
+
+// Generic % based width & height
+@for $n from 1 through 20 {
+    $val: $n * 5;
+    $dimension: percentage($val / 100);
+
+    .w--#{$val}, .width--#{$val} {
+        width: #{$dimension};
+        max-width: #{$dimension};
+    }
+
+    .h--#{$val}, .height--#{$val} {
+        height: #{$dimension};
+        max-height: #{$dimension};
+    }
+
+    @each $side in $viewportSides {
+        $letter: nth($side, 1);
+        $portSide: nth($side, 2);
+        $key: nth($side, 3);
+
+        // .w--100vw  - width is 100vw
+        // .w--100vh  - width is 100vh
+        // .h--50vw   - height is 50vw
+        // .h--10vh   - height is 10vh
+        .#{$letter}--#{$val}#{$portSide} {
+            #{$key}: #{$val}#{$portSide};
+        }
+    }
+}
+
+.w--max, .width--max { max-width: 100%; }
+.h--max, .height--max { max-height: 100%; }
